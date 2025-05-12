@@ -1,11 +1,16 @@
+from datetime import datetime, timedelta, timezone
 from fastapi import status
 from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.db.models import UserModel
-from app.schemas import User
 from passlib.context import CryptContext
+from jose import jwt, JWTError
+from decouple import config
+from app.schemas import UserRegister, UserLogin
+from app.db.models import UserModel
 
+SECRET_KEY = config('SECRET_KEY')
+ALGORITHM = config('ALGORITHM')
 crypt_context = CryptContext(schemes=['sha256_crypt'])
 
 
@@ -14,7 +19,7 @@ class UserUseCases:
         self.db_session = db_session
         
     
-    def user_register(self, user: User):
+    def user_register(self, user: UserRegister):
         user_model = UserModel(
             username=user.username,
             email=user.email,
@@ -29,4 +34,36 @@ class UserUseCases:
                 detail='User already exists'
             )
             
-    
+            
+    def user_login(self, user: UserLogin, expires_in: int = 30):
+        user_on_db = self.db_session.query(UserModel).filter_by(username=user.username).first()
+        
+               
+        if user_on_db is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid username or password'
+            )            
+        
+            
+        if not crypt_context.verify(user.password, user_on_db.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid username or password'
+            )
+            
+        
+            
+        exp = datetime.now(timezone.utc) + timedelta(minutes=expires_in)
+
+        payload = {
+            'sub': user.username,
+            'exp': exp
+        }
+        
+        access_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        
+        return {
+            'access_token': access_token,
+            'exp': exp.isoformat()
+        }
