@@ -49,4 +49,12 @@ class UserLogin(BaseModel):
         if not re.match('^([a-z]|[0-9]|@)+$', value):
             raise ValueError('Username format invalid')
         return value
-    
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    exp: str
+
+
+class SuccessMessageResponse(BaseModel):
+    msg: str
