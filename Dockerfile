@@ -20,7 +20,10 @@ RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi
 
 # Copia o restante do código
-COPY ./app /app
+COPY ./app /app/
+
+# Define o PYTHONPATH para garantir que o Python encontre o módulo 'app'
+ENV PYTHONPATH=/app
 
 # Comando para rodar a aplicação
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8081", "--reload"]

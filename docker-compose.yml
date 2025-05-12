@@ -5,8 +5,8 @@ services:
     ports:
       - "8000:8081" 
     volumes:
-      - ./app:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8081 --reload
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8081 --reload
     depends_on:
       - postgresql
     env_file:
@@ -20,7 +20,7 @@ services:
     env_file:
       - ./.env
     volumes:
-      - /var/cache/postgres_data_2:/var/lib/postgresql/data
+      - /var/cache/postgres_data_3:/var/lib/postgresql/data
     networks:
       - app-network
 
